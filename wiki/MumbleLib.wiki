@@ -2,8 +2,8 @@
 
 = Introduction =
 
-MumbleLib provides an implementation of commonly used instant messaging protocols in ActionScript 3.0. At it's core is a set of interfaces to simplify usage of multiple protocols in the same application easier.
+MumbleLib provides an implementation of commonly used instant messaging protocols in !ActionScript 3.0. At it's core is a set of interfaces to simplify usage of multiple protocols in the same application.
 
-== Protocols ==
+== Supported Protocols ==
 
-AIM (TOC 2.0)
+AIM (TOC2)
