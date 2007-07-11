@@ -81,10 +81,10 @@ package com.flashtoolbox.mumble.aim
 	//--------------------------------------
 		
 		/**
-		 *  Constructor.
+		 * Constructor.
 		 * 
-		 *  @param host		the server in which to connect
-		 *  @param port		the port on the server in which you are connecting
+		 * @param host		the server in which to connect
+		 * @param port		the port on the server in which you are connecting
 		 */
 		public function AIMService(host:String = "aimexpress.oscar.aol.com", port:int = 5190)
 		{
@@ -206,6 +206,7 @@ package com.flashtoolbox.mumble.aim
 			var disconnectEvent:MessengerServiceEvent = new MessengerServiceEvent(MessengerServiceEvent.DISCONNECT, this.screenName);
 			this._screenName = null;
 			this.password = null;
+			this._contacts = [];
 			this.dispatchEvent(disconnectEvent);
 		}
 		
@@ -417,8 +418,8 @@ package com.flashtoolbox.mumble.aim
 		
 		/**
 		 * @private
-		 *  Confirms an acknowledgement to the FLAPON command, and passes
-		 *  control to the main message handler.
+		 * Confirms an acknowledgement to the FLAPON command, and passes
+		 * control to the main message handler.
 		 */
 		private function socketConnectionResponseHandler(event:ProgressEvent):void
 		{
@@ -428,8 +429,8 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/**
-		 *  @private
-		 *  Initialize the sequence number and sign on to the AIM service.
+		 * @private
+		 * Initialize the sequence number and sign on to the AIM service.
 		 */
 		private function signOn():void
 		{
@@ -460,8 +461,8 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/**
-		 *  @private
-		 *  Handles messages that are received from the server.
+		 * @private
+		 * Handles messages that are received from the server.
 		 */
 		private function socketReceiveDataHandler(event:ProgressEvent):void
 		{
@@ -487,10 +488,10 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/**
-		 *  @private
-		 *  Reads and parses commands sent from the server.
+		 * @private
+		 * Reads and parses commands sent from the server.
 		 * 
-		 *  @param message		the raw server command
+		 * @param message		the raw server command
 		 */
 		private function parseServerCommand(command:String):void
 		{
@@ -535,10 +536,10 @@ package com.flashtoolbox.mumble.aim
 	//-- Specific server command processing
 		
 		/**
-		 *  @private
-		 *  Reads and parses a SIGN_ON command
+		 * @private
+		 * Reads and parses a SIGN_ON command
 		 * 
-		 *  @param command		the raw server command
+		 * @param command		the raw server command
 		 */
 		private function processSignOnCommand(command:String):void
 		{
@@ -554,10 +555,10 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/**
-		 *  @private
-		 *  Reads and parses a CONFIG2 command
+		 * @private
+		 * Reads and parses a CONFIG2 command
 		 * 
-		 *  @param command		the raw server command
+		 * @param command		the raw server command
 		 */
 		private function processConfigCommand(command:String):void
 		{
@@ -604,10 +605,10 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/**
-		 *  @private
-		 *  Reads and parses an ERROR command
+		 * @private
+		 * Reads and parses an ERROR command
 		 * 
-		 *  @param command		the raw server command
+		 * @param command		the raw server command
 		 */
 		private function processErrorCommand(command:String):void
 		{
@@ -622,10 +623,10 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/**
-		 *  @private
-		 *  Reads and parses an UPDATE_BUDDY2 command
+		 * @private
+		 * Reads and parses an UPDATE_BUDDY2 command
 		 * 
-		 *  @param command		the raw server command
+		 * @param command		the raw server command
 		 */
 		private function processUpdateBuddyCommand(command:String):void
 		{
@@ -661,10 +662,10 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 		/** 
-		 *  @private
-		 *  Reads and parses an IM_IN2 command
+		 * @private
+		 * Reads and parses an IM_IN2 command
 		 * 
-		 *  @param command		the raw server command
+		 * @param command		the raw server command
 		 */
 		private function processImInCommand(command:String):void
 		{
