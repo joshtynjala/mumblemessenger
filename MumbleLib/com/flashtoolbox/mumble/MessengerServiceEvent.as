@@ -54,14 +54,15 @@ package com.flashtoolbox.mumble
 		 * Constructor.
 		 * 
 		 * @param type			The event type.
-		 * @param screeName		The screen name associated with the event.
+		 * @param data			Relevant associated with the event.
 		 * @param time			The time at which the event fired.
 		 */
-		public function MessengerServiceEvent(type:String, screenName:String, time:Date = null)
+		public function MessengerServiceEvent(type:String, data:Object = null, time:Date = null)
 		{
 			super(type, false, false);
 			
-			this.screenName = screenName;
+			this.data = data;
+			
 			if(time)
 			{
 				this.time = time;
@@ -74,14 +75,14 @@ package com.flashtoolbox.mumble
 	//--------------------------------------
 		
 		/**
-		 * The screen name associated with the event.
-		 */
-		public var screenName:String;
-		
-		/**
 		 * The time at which the event fired.
 		 */
 		public var time:Date;
+		
+		/**
+		 * Relevant data associated with the event.
+		 */
+		public var data:Object;
 		
 	//--------------------------------------
 	//  Public Methods
@@ -92,7 +93,7 @@ package com.flashtoolbox.mumble
 		 */
 		override public function clone():Event
 		{
-			var clonedEvent:MessengerServiceEvent = new MessengerServiceEvent(this.type, this.screenName, this.time);
+			var clonedEvent:MessengerServiceEvent = new MessengerServiceEvent(this.type, this.time);
 			return clonedEvent;
 		}
 		

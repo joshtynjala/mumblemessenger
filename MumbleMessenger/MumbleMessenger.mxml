@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:control="com.flashtoolbox.messenger.control.*"
+	xmlns:views="com.flashtoolbox.messenger.views.*"
+	xmlns="*"
+	layout="vertical" width="300" height="200"
+	title="Mumble Messenger" showStatusBar="false"
+	usePreloader="false">
+		
+	<!-- Cairngorm -->
+	<control:MessengerController id="controller"/>
+	<views:LoginForm width="100%" height="100%"/>
+	
+	<mx:Style source="style.css"/>
+</mx:WindowedApplication>

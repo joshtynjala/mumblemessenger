@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ContactListBase
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:toolbox="http://www.flextoolbox.com/2006/mxml"
+	xmlns:views="com.flashtoolbox.messenger.views.*"
+	title="Mumble Messenger"
+	layout="vertical" width="250" height="400"
+	backgroundColor="#c0cbd0" showFlexChrome="false"
+	paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+	
+	<mx:Binding source="model.contacts" destination="dataProvider"/>
+	<mx:Binding source="model.contactListStatus" destination="messageStatus"/>
+	
+	<mx:ControlBar paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5">
+		<mx:Button icon="{Library.SendMessageIcon}" toolTip="Send Message to Contact"
+			click="sendMessageClickHandler(event)"/>
+		<mx:Button icon="{Library.AddUserIcon}" toolTip="Add New Contact"
+			click="addContactClickHandler(event)"/>
+		<mx:Button icon="{Library.RemoveUserIcon}" toolTip="Remove Contact"
+			click="removeContactClickHandler(event)"/>
+	</mx:ControlBar>
+	
+	<mx:List id="list" width="100%" height="100%"
+		labelField="screenName" doubleClickEnabled="true"
+		iconFunction="{getServiceIcon}"
+		itemDoubleClick="listDoubleClickHandler(event)">
+	</mx:List>
+	
+	<mx:StringValidator id="screenNameValidator" 
+        source="{contactNameInput}"
+        property="text"
+        required="true"
+        trigger="{addButton}"
+        triggerEvent="click"
+        valid="addNewContact()"
+        requiredFieldError="Enter a contact's screen name."/>
+		
+	<mx:Fade id="quickFade" duration="100"/>
+	
+	<views:states>
+		<mx:State name="AddContact">
+			<mx:AddChild relativeTo="{list}" position="before">
+			
+				<mx:HBox id="addContactForm" width="100%" verticalAlign="middle" addedEffect="{quickFade}"
+					paddingLeft="10" paddingRight="10" paddingTop="5" paddingBottom="5">
+					<mx:Image source="{Library.UserIcon}" toolTip="Screen Name"/>
+					<toolbox:AdvancedTextInput id="contactNameInput" width="100%" promptText="New Contact"/>
+					<mx:Button id="addButton" label="Add"/>
+				</mx:HBox>
+				
+			</mx:AddChild>
+		</mx:State>
+		
+		<mx:State name="AddingContact">
+			<mx:AddChild relativeTo="{list}" position="before">
+				<mx:ProgressBar width="100%" label="Adding Contact" indeterminate="true"/>
+			</mx:AddChild>
+		</mx:State>
+		
+		<mx:State name="ShowNotify">
+			<mx:AddChild relativeTo="{list}" position="before">
+				<mx:HBox id="notifyBar" styleName="notifyMessage"
+					width="100%" verticalAlign="middle"
+					paddingLeft="10" paddingRight="10" paddingTop="5" paddingBottom="5">
+					<mx:Label width="100%" text="{model.contactListStatusMessage}"/>
+					<mx:Button label="X" click="model.contactListStatus = ''"/>
+				</mx:HBox>
+			</mx:AddChild>
+		</mx:State>
+		
+		<mx:State name="ShowError" basedOn="ShowNotify">
+			<mx:SetProperty target="{notifyBar}" name="styleName" value="errorMessage"/>
+		</mx:State>
+		
+		<mx:State name="ShowSuccess" basedOn="ShowNotify">
+			<mx:SetProperty target="{notifyBar}" name="styleName" value="successMessage"/>
+		</mx:State>
+	</views:states>
+	
+	<views:transitions>
+		<mx:Transition fromState="" toState="AddContact">
+			<mx:Sequence>
+				<mx:Move target="{list}" duration="100"/>
+				<mx:AddChildAction target="{addContactForm}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		
+		<mx:Transition fromState="AddContact" toState="*">
+			<mx:SetPropertyAction target="{contactNameInput}" name="text" value=""/>
+		</mx:Transition>
+		
+		<mx:Transition fromState="*" toState="ShowError">
+			<mx:Fade target="{notifyBar}" alphaFrom="0" alphaTo="1" duration="150"/>
+		</mx:Transition>
+		
+		<mx:Transition fromState="ShowNotify" toState="">
+			<mx:Sequence>	
+				<mx:Fade target="{notifyBar}" alphaFrom="1" alphaTo="0" duration="100"/>
+				<mx:RemoveChildAction target="{notifyBar}"/>
+				<mx:SetPropertyAction target="{notifyBar}" name="styleName"/>
+				<mx:Move target="{list}" duration="100"/>
+				<mx:SetPropertyAction target="{model}" name="contactListStatus" value=""/>
+			</mx:Sequence>
+		</mx:Transition>
+		
+		<mx:Transition fromState="ShowError" toState="">
+			<mx:Sequence>	
+				<mx:Fade target="{notifyBar}" alphaFrom="1" alphaTo="0" duration="100"/>
+				<mx:RemoveChildAction target="{notifyBar}"/>
+				<mx:SetPropertyAction target="{notifyBar}" name="styleName"/>
+				<mx:Move target="{list}" duration="100"/>
+			</mx:Sequence>
+		</mx:Transition>
+		
+		<mx:Transition fromState="ShowSuccess" toState="">
+			<mx:Sequence>	
+				<mx:Fade target="{notifyBar}" alphaFrom="1" alphaTo="0" duration="100"/>
+				<mx:RemoveChildAction target="{notifyBar}"/>
+				<mx:SetPropertyAction target="{notifyBar}" name="styleName"/>
+				<mx:Move target="{list}" duration="100"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</views:transitions>
+	
+</views:ContactListBase>

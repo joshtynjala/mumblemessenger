@@ -31,6 +31,8 @@ package com.flashtoolbox.mumble
 		public static const UPDATE_STATUS:String = "updateStatus";
 		public static const RECEIVE_MESSAGE:String = "receiveMessage";
 		public static const RECEIVE_PROFILE:String = "receiveProfile";
+		public static const CONTACT_ADDED:String = "contactAdded";
+		public static const CONTACT_REMOVED:String = "contactRemoved";
 		
 		public function ContactEvent(type:String, contact:IContact, data:Object = null, time:Date = null, bubbles:Boolean=false, cancelable:Boolean=false)
 		{

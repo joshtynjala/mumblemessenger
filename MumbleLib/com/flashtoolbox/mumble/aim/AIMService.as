@@ -52,6 +52,7 @@ package com.flashtoolbox.mumble.aim
 		private static const USER_AGENT:String = "\"TIC:TOC\"";
 		private static const PROTOCOL_IDENTIFIER:String = "TOC2.0";
 		private static const FLAPON:String = "FLAPON\r\n\r\n";
+		private static const TIMOUT_DURATION:int = 10000;
 		
 		private static const HEADER_LENGTH:int = 6;
 		
@@ -75,6 +76,9 @@ package com.flashtoolbox.mumble.aim
 		private static const SERVER_GOTO_URL:String = "GOTO_URL";
 		private static const SERVER_NEW_BUDDY:String = "NEW_BUDDY_REPLY2";
 		private static const SERVER_CLIENT_EVENT:String = "CLIENT_EVENT2";
+		private static const SERVER_UPDATED:String = "UPDATED2";
+		private static const SERVER_INSERTED:String = "INSERTED2";
+		private static const SERVER_DELETED:String = "DELETED2";
 		
 	//--------------------------------------
 	//  Constructor
@@ -165,6 +169,29 @@ package com.flashtoolbox.mumble.aim
 		 */
 		private var _lastProfileContact:IContact;
 		
+		/**
+		 * @private
+		 * Storage for the debugMode property.
+		 */
+		private var _debugMode:Boolean = false;
+		
+		/**
+		 * If true, an AIMCommandEvent.RECEIVE_COMMAND event will be dispatched
+		 * for every command received from the server, whether it is handled or not.
+		 */
+		public function get debugMode():Boolean
+		{
+			return this._debugMode;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set debugMode(value:Boolean):void
+		{
+			this._debugMode = value;
+		}
+		
 	//--------------------------------------
 	//  Public Methods
 	//--------------------------------------
@@ -203,7 +230,7 @@ package com.flashtoolbox.mumble.aim
 				this.socket.close();
 			}
 			
-			var disconnectEvent:MessengerServiceEvent = new MessengerServiceEvent(MessengerServiceEvent.DISCONNECT, this.screenName);
+			var disconnectEvent:MessengerServiceEvent = new MessengerServiceEvent(MessengerServiceEvent.DISCONNECT, message);
 			this._screenName = null;
 			this.password = null;
 			this._contacts = [];
@@ -215,18 +242,15 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public function sendMessage(contact:IContact, message:String):void
 		{
-			if(!this.socket.connected)
+			if(!this.connected)
 			{
-				this.disconnect();
+				throw new Error("Must be connected to send a message.");
 				return;
 			}
 			
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_SEND_IM + " " + AIMUtil.normalizeScreenName(contact.screenName) + " \"" + message + "\" F");
-			var clientSendMessage:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(clientSendMessage);
-			this.socket.flush();
-			this.sequence++;
+			var sendImCommand:ByteArray = new ByteArray();
+			sendImCommand.writeUTFBytes(CLIENT_SEND_IM + " " + AIMUtil.normalizeScreenName(contact.screenName) + " \"" + message + "\" F");
+			this.sendClientCommand(sendImCommand);
 		}
 		
 		/**
@@ -234,9 +258,9 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public function getContactProfile(contact:IContact):void
 		{
-			if(!this.socket.connected)
+			if(!this.connected)
 			{
-				this.disconnect();
+				throw new Error("Must be connected to retrieve a profile.");
 				return;
 			}
 			
@@ -248,12 +272,9 @@ package com.flashtoolbox.mumble.aim
 			
 			this._lastProfileContact = contact;
 			
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_GET_INFO + " " + AIMUtil.normalizeScreenName(contact.screenName));
-			var clientGetInfo:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(clientGetInfo);
-			this.socket.flush();
-			this.sequence++;
+			var getInfoCommand:ByteArray = new ByteArray();
+			getInfoCommand.writeUTFBytes(CLIENT_GET_INFO + " " + AIMUtil.normalizeScreenName(contact.screenName));
+			this.sendClientCommand(getInfoCommand);
 		}
 		
 		/**
@@ -261,18 +282,15 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public function setUserProfile(profile:String):void
 		{
-			if(!this.socket.connected)
+			if(!this.connected)
 			{
-				this.disconnect();
+				throw new Error("Must be connected to set profile.");
 				return;
 			}
 			
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_SET_INFO + " \"" + profile + "\"");
-			var setInfo:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(setInfo);
-			this.socket.flush();
-			this.sequence++;
+			var setInfoCommand:ByteArray = new ByteArray();
+			setInfoCommand.writeUTFBytes(CLIENT_SET_INFO + " \"" + profile + "\"");
+			this.sendClientCommand(setInfoCommand);
 		}
 		
 		/**
@@ -280,18 +298,15 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public function setStatusMessage(message:String):void
 		{
-			if(!this.socket.connected)
+			if(!this.connected)
 			{
-				this.disconnect();
+				throw new Error("Must be connected to set status.");
 				return;
 			}
 			
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_SET_AWAY + " \"" + message + "\"");
-			var setAway:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(setAway);
-			this.socket.flush();
-			this.sequence++;
+			var setAwayCommand:ByteArray = new ByteArray();
+			setAwayCommand.writeUTFBytes(CLIENT_SET_AWAY + " \"" + message + "\"");
+			this.sendClientCommand(setAwayCommand);
 		}
 		
 		/**
@@ -299,18 +314,20 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public function addContact(screenName:String, groupName:String):void
 		{
-			if(!this.socket.connected)
+			if(!this.connected)
 			{
-				this.disconnect();
+				throw new Error("Must be connected to add a contact.");
 				return;
 			}
 			
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_NEW_BUDDIES + " " +  "g:" + groupName + "\nb:" + screenName + "\n");
-			var addContact:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(addContact);
-			this.socket.flush();
-			this.sequence++;
+			var newContact:AIMContact = new AIMContact(screenName);
+			newContact.groupName = groupName;
+			newContact.service = this;
+			this.contacts.push(newContact);
+			
+			var addContactCommand:ByteArray = new ByteArray();
+			addContactCommand.writeUTFBytes(CLIENT_NEW_BUDDIES + " " +  "{g:" + groupName + "\nb:" + AIMUtil.normalizeScreenName(screenName) + "\n}");
+			this.sendClientCommand(addContactCommand);
 		}
 		
 		/**
@@ -318,18 +335,23 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public function removeContact(contact:IContact):void
 		{
-			if(!this.socket.connected)
+			if(!this.connected)
 			{
-				this.disconnect();
+				throw new Error("Must be connected to remove a contact.");
 				return;
 			}
 			
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_REMOVE_BUDDY + " " +  contact.screenName + " " + contact.groupName);
-			var removeContact:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(removeContact);
-			this.socket.flush();
-			this.sequence++;
+			var removeContactCommand:ByteArray = new ByteArray();
+			removeContactCommand.writeUTFBytes(CLIENT_REMOVE_BUDDY + " " +  AIMUtil.normalizeScreenName(contact.screenName) + " \"" + contact.groupName + "\"");
+			this.sendClientCommand(removeContactCommand);
+			
+			//for some reason, we don't get a response back from the server
+			//when we remove a contact.
+			//well... we do, but its a weird INSERTED2 command, and I'm not sure I trust it
+			var index:int = this.contacts.indexOf(contact);
+			this.contacts.splice(index, 1);
+			var removeContactEvent:ContactEvent = new ContactEvent(ContactEvent.CONTACT_REMOVED, contact);
+			this.dispatchEvent(removeContactEvent);
 		}
 		
 		/**
@@ -351,7 +373,7 @@ package com.flashtoolbox.mumble.aim
 		}
 		
 	//--------------------------------------
-	//  Protected Methods
+	//  Private Methods
 	//--------------------------------------
 		
 		/**
@@ -376,7 +398,7 @@ package com.flashtoolbox.mumble.aim
 			
 			//there is a chance that the connection will time out without any warning.
 			//if we haven't stopped this timer by that point, we're going to disconnect.
-			this.connectionTimer = new Timer(5000, 1);
+			this.connectionTimer = new Timer(TIMOUT_DURATION, 1);
 			this.connectionTimer.addEventListener(TimerEvent.TIMER, connectionTimeOutHandler);
 			this.connectionTimer.start();
 			
@@ -403,7 +425,7 @@ package com.flashtoolbox.mumble.aim
 		 */
 		private function socketIOErrorHandler(event:IOErrorEvent):void
 		{
-			this.disconnect();
+			this.disconnect("Connection lost. IO Error.");
 		}
 		
 		/**
@@ -413,7 +435,7 @@ package com.flashtoolbox.mumble.aim
 		 */
 		private function socketSecurityErrorHandler(event:SecurityErrorEvent):void
 		{
-			this.disconnect();
+			this.disconnect("Connection lost. Security Error.");
 		}
 		
 		/**
@@ -441,21 +463,26 @@ package com.flashtoolbox.mumble.aim
 			var signOnCode:int = AIMUtil.getSignOnCode(normalizedUserName, this.password);
 			
 			//TOC FLAP SIGNON FROM CLIENT
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeInt(1);
-			clientCommand.writeShort(1);
-			clientCommand.writeShort(normalizedUserName.length);
-			clientCommand.writeUTFBytes(normalizedUserName);
-			var clientSignonResponse:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_SIGNON, this.sequence, clientCommand);
-			this.socket.writeBytes(clientSignonResponse);
+			var signOnResponse:ByteArray = new ByteArray();
+			signOnResponse.writeInt(1);
+			signOnResponse.writeShort(1);
+			signOnResponse.writeShort(normalizedUserName.length);
+			signOnResponse.writeUTFBytes(normalizedUserName);
+			signOnResponse = AIMUtil.createTocMessage(AIMUtil.FLAP_SIGNON, this.sequence, signOnResponse);
+			this.socket.writeBytes(signOnResponse);
 			this.socket.flush();
 			this.sequence++;
 			
 			//client sends sign on message
-			clientCommand = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_SIGN_ON + " " + AUTHORIZATION_SERVER + " " + AUTHORIZATION_PORT.toString() + " " + normalizedUserName + " " + roastedPassword + " english " + USER_AGENT +  " 160 " + signOnCode.toString());
-			var loginRequest:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(loginRequest);
+			var signOnCommand:ByteArray = new ByteArray();
+			signOnCommand.writeUTFBytes(CLIENT_SIGN_ON + " " + AUTHORIZATION_SERVER + " " + AUTHORIZATION_PORT.toString() + " " + normalizedUserName + " " + roastedPassword + " english " + USER_AGENT +  " 160 " + signOnCode.toString());
+			this.sendClientCommand(signOnCommand);
+		}
+		
+		private function sendClientCommand(command:ByteArray):void
+		{
+			var tocMessage:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, command);
+			this.socket.writeBytes(tocMessage);
 			this.socket.flush();
 			this.sequence++;
 		}
@@ -524,13 +551,35 @@ package com.flashtoolbox.mumble.aim
 			{
 				this.processGotoURLCommand(command);
 			}
+			else if(command.indexOf(SERVER_NEW_BUDDY) == 0)
+			{
+				this.processNewBuddyCommand(command);
+			}
+			else if(command.indexOf(SERVER_INSERTED) == 0)
+			{
+				this.processInsertCommand(command);
+			}
+			else if(command.indexOf(SERVER_DELETED) == 0)
+			{
+				this.processDeleteCommand(command);
+			}
 			else if(command.length == 0)
 			{
 				//Occasionally, we get a blank message from the server.
 				//This is a good time to send a keep-alive message back.
 				this.sendKeepAlive();
 			}
-			else trace("Unknown command:", command); //Any other messages we get might be interesting to look at
+			else
+			{
+				//Any other messages we get might be interesting to client
+				this.handleUnknownCommand(command);
+			}
+			
+			if(this.debugMode)
+			{
+				var commandEvent:AIMCommandEvent = new AIMCommandEvent(AIMCommandEvent.RECEIVE_COMMAND, command);
+				this.dispatchEvent(commandEvent);
+			}
 		}
 		
 	//-- Specific server command processing
@@ -546,7 +595,7 @@ package com.flashtoolbox.mumble.aim
 			var commandParts:Array = command.split(":");
 			if(commandParts.length >= 2)
 			{
-				var protocolID:String = commandParts[1];
+				var protocolID:String = String(commandParts[1]);
 				if(protocolID != PROTOCOL_IDENTIFIER)
 				{
 					this.disconnect("Wrong TOC protocol version. Server requested " + protocolID);
@@ -556,7 +605,8 @@ package com.flashtoolbox.mumble.aim
 		
 		/**
 		 * @private
-		 * Reads and parses a CONFIG2 command
+		 * Reads and parses a CONFIG2 command. This command gives us a listing of
+		 * the groups and contacts stored on the server.
 		 * 
 		 * @param command		the raw server command
 		 */
@@ -566,12 +616,9 @@ package com.flashtoolbox.mumble.aim
 			if(this.connectionTimer.running) this.connectionTimer.stop();
 			
 			//we've received the configuration data, so let's tell aol that we're good to go
-			var clientCommand:ByteArray = new ByteArray();
-			clientCommand.writeUTFBytes(CLIENT_INIT_DONE);
-			var initDone:ByteArray = AIMUtil.createTocMessage(AIMUtil.FLAP_DATA, this.sequence, clientCommand);
-			this.socket.writeBytes(initDone);
-			this.socket.flush();
-			this.sequence++;
+			var initDoneCommand:ByteArray = new ByteArray();
+			initDoneCommand.writeUTFBytes(CLIENT_INIT_DONE);
+			this.sendClientCommand(initDoneCommand);
 			
 			//configuration appears on multiple lines
 			var commandParts:Array = command.split("\n");
@@ -579,7 +626,7 @@ package com.flashtoolbox.mumble.aim
 			var currentGroupName:String = "";
 			for(var i:int = 0; i < partCount; i++)
 			{
-				var currentParam:String = commandParts[i] as String;
+				var currentParam:String = String(commandParts[i]);
 				//each line can have several items
 				var configurationSubParams:Array = currentParam.split(":");
 				if(configurationSubParams[0] == "g")
@@ -589,7 +636,8 @@ package com.flashtoolbox.mumble.aim
 				else if(configurationSubParams[0] == "b")
 				{
 					var contact:AIMContact = new AIMContact();
-					contact.connection = this;
+					contact.isSavedContact = true;
+					contact.service = this;
 					contact.screenName = configurationSubParams[1];
 					contact.groupName = currentGroupName;
 					this._contacts.push(contact);
@@ -597,10 +645,7 @@ package com.flashtoolbox.mumble.aim
 				//ignore any others
 			}
 			
-			//this client has some default info
-			//this.setUserInfo(TocConnection.DEFAULT_INFO);
-			
-			var connectEvent:MessengerServiceEvent = new MessengerServiceEvent(MessengerServiceEvent.CONNECT, this.screenName);
+			var connectEvent:MessengerServiceEvent = new MessengerServiceEvent(MessengerServiceEvent.CONNECT);
 			this.dispatchEvent(connectEvent);
 		}
 		
@@ -617,9 +662,8 @@ package com.flashtoolbox.mumble.aim
 			var lastDelimiter:int = command.lastIndexOf(":");
 			var errorID:int = int(command.substr(lastDelimiter + 1));
 				
-			var errorEvent:AIMServiceErrorEvent = new AIMServiceErrorEvent(AIMServiceErrorEvent.ERROR, errorID, this.screenName, new Date());
+			var errorEvent:AIMServiceErrorEvent = new AIMServiceErrorEvent(AIMServiceErrorEvent.ERROR, errorID, new Date());
 			this.dispatchEvent(errorEvent);
-			trace("Error:", errorID);
 		}
 		
 		/**
@@ -637,6 +681,7 @@ package com.flashtoolbox.mumble.aim
 			//ignore updates to contacts that aren't in the list
 			if(updatedContact)
 			{
+				updatedContact.screenName = contactName; //formatted
 				updatedContact.online = commandParts[2] != "F";
 				updatedContact.warningLevel = new int(commandParts[3]);
 				updatedContact.loginTime = new int(commandParts[4]);
@@ -673,11 +718,13 @@ package com.flashtoolbox.mumble.aim
 			var contactName:String = commandParts[1] as String;
 			var contact:IContact = this.screenNameToContact(contactName);
 			
-			//if the contact isn't in the user's buddy list, add it.
-			//TODO: this should be updated to ask the user what to do.
+			//first, let's handle the case where we have an unknown contact
 			if(!contact)
 			{
-				contact = new AIMContact(contactName);
+				contact = new AIMContact();
+				contact.service = this;
+				contact.screenName = contactName;
+				contact.isSavedContact = false;
 				this.contacts.push(contact);
 			}
 			
@@ -687,7 +734,8 @@ package com.flashtoolbox.mumble.aim
 			//remove the first four entries because we don't need them anymore
 			commandParts.splice(0, 4);
 			
-			//since the message may contain the : character, we should re-join the remaining data
+			//since the message may contain the : character,
+			//we should re-join the remaining data to get the full message
 			var message:String = commandParts.join(":");
 			
 			var receivedMessage:ContactEvent = new ContactEvent(ContactEvent.RECEIVE_MESSAGE, contact, message);
@@ -696,6 +744,10 @@ package com.flashtoolbox.mumble.aim
 			this.dispatchEvent(receivedMessage);
 		}
 		
+		/**
+		 * @private
+		 * The goto URL command tells us the location of the contact's profile.
+		 */
 		private function processGotoURLCommand(command:String):void
 		{
 			var lastDelimiter:int = command.lastIndexOf(":");
@@ -707,6 +759,77 @@ package com.flashtoolbox.mumble.aim
 			this._profileLoader.addEventListener(IOErrorEvent.IO_ERROR, profileLoaderErrorHandler, false, 0, true);
 			
 			this._profileLoader.load(new URLRequest(url));
+		}
+		
+		private function processNewBuddyCommand(command:String):void
+		{
+			var commandParts:Array = command.split(":");
+			var screenName:String = commandParts[1];
+			var action:String = commandParts[2];
+			
+			switch(action)
+			{
+				case "added":
+					var contact:AIMContact = this.screenNameToContact(screenName) as AIMContact;
+					if(!contact)
+					{
+						contact = new AIMContact();
+						contact.service = this;
+						contact.screenName = screenName;
+						this.contacts.push(contact);
+					}
+					contact.isSavedContact = true;
+					
+					var contactAdded:ContactEvent = new ContactEvent(ContactEvent.CONTACT_ADDED, contact);
+					this.dispatchEvent(contactAdded);
+					
+					break;
+				default:
+					this.handleUnknownCommand(command);
+			}
+		}
+		
+		private function processInsertCommand(command:String):void
+		{
+			var commandParts:Array = command.split(":");
+			var type:String = String(commandParts[1]);
+			switch(type)
+			{
+				default:
+					this.handleUnknownCommand(command);
+			}
+		}
+		
+		private function processDeleteCommand(command:String):void
+		{
+			var commandParts:Array = command.split(":");
+			var type:String = String(commandParts[1]);
+			
+			switch(type)
+			{
+				case "b":
+					var screenName:String = commandParts[2];
+					var contact:AIMContact = this.screenNameToContact(screenName) as AIMContact;
+					if(contact)
+					{
+						this.contacts.splice(this.contacts.indexOf(contact), 1);
+			
+						var removeContactEvent:ContactEvent = new ContactEvent(ContactEvent.CONTACT_REMOVED, contact);
+						this.dispatchEvent(removeContactEvent);
+					}
+					break;
+				default:
+					this.handleUnknownCommand(command);
+			}	
+		}
+		
+		private function handleUnknownCommand(command:String):void
+		{
+			if(this.debugMode)
+			{
+				var unknownCommand:AIMCommandEvent = new AIMCommandEvent(AIMCommandEvent.UNKNOWN_COMMAND, command);
+				this.dispatchEvent(unknownCommand);
+			}
 		}
 		
 		/**

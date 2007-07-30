@@ -15,9 +15,9 @@ package com.flashtoolbox.mumble
 	//  Constructor
 	//--------------------------------------
 	
-		public function MessengerServiceErrorEvent(type:String, message:String, screenName:String, time:Date=null)
+		public function MessengerServiceErrorEvent(type:String, message:String, time:Date=null)
 		{
-			super(type, screenName, time);
+			super(type, time);
 		}
 		
 	//--------------------------------------
@@ -32,7 +32,7 @@ package com.flashtoolbox.mumble
 		
 		override public function clone():Event
 		{
-			return new MessengerServiceErrorEvent(type, message, screenName, time);
+			return new MessengerServiceErrorEvent(type, message, time);
 		}
 	}
 }
