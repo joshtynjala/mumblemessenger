@@ -44,12 +44,12 @@ package com.flashtoolbox.mumble
 		
 		private var _connection:IMessengerService;
 		
-		public function get connection():IMessengerService
+		public function get service():IMessengerService
 		{
 			return this._connection;
 		}
 		
-		public function set connection(value:IMessengerService):void
+		public function set service(value:IMessengerService):void
 		{
 			this._connection = value;
 		}
@@ -76,6 +76,18 @@ package com.flashtoolbox.mumble
 		public function set groupName(value:String):void
 		{
 			this._groupName = value;
+		}
+		
+		private var _isSavedContact:Boolean = false;
+		
+		public function get isSavedContact():Boolean
+		{
+			return this._isSavedContact;
+		}
+		
+		public function set isSavedContact(value:Boolean):void
+		{
+			this._isSavedContact = value;
 		}
 		
 		private var _online:Boolean = false;
@@ -108,7 +120,7 @@ package com.flashtoolbox.mumble
 		
 		public function sendMessage(messageText:String):void
 		{
-			this.connection.sendMessage(this, messageText);
+			this.service.sendMessage(this, messageText);
 		}
 		
 	}

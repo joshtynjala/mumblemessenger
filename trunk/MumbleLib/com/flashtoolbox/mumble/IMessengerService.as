@@ -74,6 +74,13 @@ package com.flashtoolbox.mumble
 	 * @eventType com.flashtoolbox.mumble.ContactEvent.RECEIVE_PROFILE
 	 */
 	[Event(name="receiveProfile", type="com.flashtoolbox.mumble.ContactEvent")]
+
+	/**
+	 * Dispatched when a new contact is saved.
+	 *
+	 * @eventType com.flashtoolbox.mumble.ContactEvent.CONTACT_ADDED
+	 */
+	[Event(name="contactAdded", type="com.flashtoolbox.mumble.ContactEvent")]
 	
 	/**
 	 * A common interface for connections to instant messenger services.
@@ -94,6 +101,16 @@ package com.flashtoolbox.mumble
 		 * True if the user is connected, and false if he or she is not.
 		 */
 		function get connected():Boolean;
+		
+		/**
+		 * Enables or disables developer debug mode.
+		 */
+		function get debugMode():Boolean;
+		
+		/**
+		 * @private
+		 */
+		function set debugMode(value:Boolean):void;
 		
 		/**
 		 * Connects to the messenger server, and logs into the specified account.

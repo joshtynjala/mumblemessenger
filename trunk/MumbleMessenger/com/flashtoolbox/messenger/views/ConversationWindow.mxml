@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ConversationWindowBase
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:views="com.flashtoolbox.messenger.views.*"
+	width="350" height="350" showStatusBar="false"
+	paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
+	
+	<mx:StringValidator id="screenNameValidator" 
+		source="{editor}"
+		property="text"
+		required="true"
+		trigger="{sendMessageButton}"
+		triggerEvent="click"
+		requiredFieldError="Please enter a user name." valid="this.sendMessage()"/>
+	
+	<mx:HTML id="historyDisplay" width="100%" height="70%" htmlText="" verticalScrollPolicy="on"/>
+	
+	<mx:TextArea id="editor" width="100%" height="30%"/>
+	
+	<mx:HBox>
+		<!--<mx:Button label="B" width="30" toggle="true" id="bold" enabled="false"/>
+		<mx:Button label="I" width="30" toggle="true" id="italic" enabled="false"/>
+		<mx:Button label="U" width="30" toggle="true" id="underline" enabled="false"/>
+		<mx:VRule width="20" height="20"/>
+		<mx:ColorPicker id="fontColor" enabled="false"/>
+		<mx:Button label="+" width="30" id="fontPlus" enabled="false"/>
+		<mx:Button label="-" width="30" id="fontMinus" enabled="false"/>
+		<mx:VRule width="20" height="20"/>-->
+		
+		<mx:Button id="sendMessageButton" label="Send"/>
+	</mx:HBox>
+	
+</views:ConversationWindowBase>

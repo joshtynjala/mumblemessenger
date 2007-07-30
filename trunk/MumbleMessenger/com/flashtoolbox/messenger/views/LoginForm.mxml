@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:LoginFormBase
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:toolbox="http://www.flextoolbox.com/2006/mxml"
+	xmlns:views="com.flashtoolbox.messenger.views.*"
+	xmlns="*">
+	
+	<mx:Binding source="model.services" destination="services"/>
+	
+	<mx:StringValidator id="screenNameValidator" 
+		source="{screenNameInput}"
+		property="text"
+		required="true"
+		trigger="{signOnButton}"
+		triggerEvent="click"
+		requiredFieldError="Please enter a user name."/>
+        
+	<mx:StringValidator id="passwordValidator" 
+		source="{passwordInput}" 
+		property="text" 
+		required="true"
+		trigger="{screenNameValidator}"
+		triggerEvent="valid" 
+		valid="connect()"
+		requiredFieldError="Please enter a password."/>
+
+	<!--<mx:HBox width="100%">
+		<mx:Image source="{Library.ServiceIcon}"/>
+	    <mx:ComboBox width="100%" labelField="@name">
+	    	<mx:XMLList xmlns="">
+	    		<service name="AOL Instant Messenger"/>
+	    	</mx:XMLList>
+	    </mx:ComboBox>
+    </mx:HBox>-->
+        
+	<mx:HBox width="100%">
+		<mx:Image source="{Library.UserIcon}"/>
+		<toolbox:AdvancedTextInput id="screenNameInput" width="100%" promptText="Screen Name"/>
+	</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Image source="{Library.PasswordIcon}"/>
+		<toolbox:AdvancedTextInput id="passwordInput" width="100%" displayAsPassword="true" promptText="Password"/>
+	</mx:HBox>
+	<mx:Button id="signOnButton" label="Sign On"/>
+	
+</views:LoginFormBase>

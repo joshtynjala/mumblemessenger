@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ContactProfileWindowBase
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:views="com.flashtoolbox.messenger.views.*"
+	layout="vertical"
+	width="350" height="350"
+	showFlexChrome="false"
+	paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+
+	<mx:HTML width="100%" height="100%" htmlText="{profile}"/>
+	
+</views:ContactProfileWindowBase>

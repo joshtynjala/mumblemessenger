@@ -16,9 +16,9 @@ package com.flashtoolbox.mumble.aim
 	//  Constructor
 	//--------------------------------------
 	
-		public function AIMServiceErrorEvent(type:String, errorCode:int, screenName:String, time:Date=null)
+		public function AIMServiceErrorEvent(type:String, errorCode:int, time:Date=null)
 		{
-			super(type, this.errorCodeToMessage(errorCode), screenName, time);
+			super(type, this.errorCodeToMessage(errorCode), time);
 			this.errorCode = errorCode;
 		}
 		
@@ -34,7 +34,7 @@ package com.flashtoolbox.mumble.aim
 		
 		override public function clone():Event
 		{
-			return new AIMServiceErrorEvent(this.type, this.errorCode, this.screenName, this.time);
+			return new AIMServiceErrorEvent(this.type, this.errorCode, this.time);
 		}
 		
 	//--------------------------------------

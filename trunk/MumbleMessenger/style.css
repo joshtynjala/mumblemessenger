@@ -1,0 +1,35 @@
+ConversationWindow
+{
+	backgroundColor: #ffffff;
+	paddingLeft: 10;
+	paddingRight: 10;
+	paddingTop: 10;
+	paddingBottom: 10;
+	verticalGap: 10;
+}
+
+MumbleMessenger
+{
+	backgroundGradientColors: #ffffff, #dddddd;
+}
+
+.errorMessage
+{
+	backgroundColor: #990000;
+	color: #ffffff;
+	fontWeight: "bold";
+}
+
+.successMessage
+{
+	backgroundColor: #009900;
+	color: #ffffff;
+	fontWeight: "bold";
+}
+
+.notifyMessage
+{
+	backgroundColor: #005599;
+	color: #ffffff;
+	fontWeight: "bold";
+}

@@ -42,14 +42,17 @@ package com.flashtoolbox.mumble
 	
 	public interface IContact extends IEventDispatcher
 	{
-		function get connection():IMessengerService;
-		function set connection(value:IMessengerService):void;
+		function get service():IMessengerService;
+		function set service(value:IMessengerService):void;
 		
 		function get screenName():String;
 		function set screenName(value:String):void;
 		
 		function get groupName():String;
 		function set groupName(value:String):void;
+		
+		function get isSavedContact():Boolean;
+		function set isSavedContact(value:Boolean):void;
 		
 		function get online():Boolean;
 		function set online(value:Boolean):void;

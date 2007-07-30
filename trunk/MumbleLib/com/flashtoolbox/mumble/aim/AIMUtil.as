@@ -78,6 +78,7 @@ package com.flashtoolbox.mumble.aim
 		 */
 		public static function createTocMessage(type:int, sequence:int, message:ByteArray):ByteArray
 		{
+			//add the null terminator if needed.
 			if(type == AIMUtil.FLAP_DATA) message.writeByte(0);
 			var tocMessage:ByteArray = AIMUtil.createFlapHeader(type, sequence, message.length);
 			tocMessage.writeBytes(message);
