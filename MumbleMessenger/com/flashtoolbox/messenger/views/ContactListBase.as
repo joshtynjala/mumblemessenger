@@ -170,7 +170,8 @@ package com.flashtoolbox.messenger.views
 		
 		protected function addContactClickHandler(event:MouseEvent):void
 		{
-			this.currentState = "AddContact";
+			var addContactWindow:AddContactWindow = new AddContactWindow();
+			addContactWindow.open();
 		}
 		
 		protected function removeContactClickHandler(event:MouseEvent):void
@@ -214,15 +215,6 @@ package com.flashtoolbox.messenger.views
 				var openConversation:ContactActionEvent = new ContactActionEvent(ContactActionEvent.OPEN_CONVERSATION, contact)
 				openConversation.dispatch();
 			}
-		}
-		
-		protected function addNewContact():void
-		{
-			var screenName:String = this.contactNameInput.text;
-			this.contactNameInput.text = "";
-			
-			var addContactEvent:AddNewContactEvent = new AddNewContactEvent(this.model.services[0], screenName, "The Usual Suspects");
-			addContactEvent.dispatch();
 		}
 		
     //----------------------------------

@@ -25,15 +25,6 @@
 		iconFunction="{getServiceIcon}"
 		itemDoubleClick="listDoubleClickHandler(event)">
 	</mx:List>
-	
-	<mx:StringValidator id="screenNameValidator" 
-        source="{contactNameInput}"
-        property="text"
-        required="true"
-        trigger="{addButton}"
-        triggerEvent="click"
-        valid="addNewContact()"
-        requiredFieldError="Enter a contact's screen name."/>
 		
 	<mx:Fade id="quickFade" duration="100"/>
 	
