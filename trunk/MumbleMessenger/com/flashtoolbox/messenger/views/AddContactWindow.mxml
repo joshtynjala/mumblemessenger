@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Window xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="300" height="200" resizable="false"
+	title="Add a New Contact" showStatusBar="false"
+	creationComplete="creationCompleteHandler();">
+	
+	<mx:StringValidator id="screenNameValidator" 
+        source="{contactScreenName}"
+        property="text"
+        required="true"
+        trigger="{addContactButton}"
+        triggerEvent="click"
+        valid="addNewContact()"
+        requiredFieldError="Enter a contact's screen name."/>
+	
+	<mx:Form width="100%" height="100%">
+		<mx:FormItem label="Account" width="100%">
+			<mx:ComboBox id="services" width="100%"
+				dataProvider="{this.model.services}" valueCommit="updateGroups()"
+				labelField="screenName" dropdownFactory="{serviceDropDownFactory}"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="Screen Name" width="100%">
+			<mx:TextInput id="contactScreenName" width="100%"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="Group" width="100%">
+			<mx:ComboBox id="groups" width="100%" dataProvider="{this.groupNames}"/>
+		</mx:FormItem>
+	</mx:Form>
+	
+	<mx:ControlBar horizontalAlign="right" width="100%">
+		<mx:Button id="addContactButton" label="Add Contact"/>
+		<mx:Button label="Cancel" click="this.close()"/>
+	</mx:ControlBar>
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.List;
+			import com.flashtoolbox.mumble.IContact;
+			import com.flashtoolbox.messenger.events.AddNewContactEvent;
+			import com.flashtoolbox.mumble.aim.AIMService;
+			import com.flashtoolbox.mumble.IMessengerService;
+			import com.flashtoolbox.messenger.model.MessengerModelLocator;
+			
+	    //----------------------------------
+		//  Properties
+	    //----------------------------------
+				
+			[Bindable]
+			private var model:MessengerModelLocator = MessengerModelLocator.getInstance();
+			
+			[Bindable]
+			private var serviceDropDownFactory:ClassFactory = new ClassFactory(List);
+			
+			[Bindable]
+			private var groupNames:Array = [];
+			
+	    //----------------------------------
+		//  Private Methods
+	    //----------------------------------
+			
+			private function creationCompleteHandler():void
+			{
+				this.serviceDropDownFactory.properties = {iconFunction: getServiceIcon};
+			}
+			
+			private function addNewContact():void
+			{
+				var screenName:String = this.contactScreenName.text;
+				this.contactScreenName.text = "";
+				
+				var service:IMessengerService = this.services.selectedItem as IMessengerService;
+				var groupName:String = this.groups.text;
+				
+				var addContactEvent:AddNewContactEvent = new AddNewContactEvent(service, screenName, groupName);
+				addContactEvent.dispatch();
+				
+				this.close();
+			}
+			
+			private function updateGroups():void
+			{
+				var service:IMessengerService = this.services.selectedItem as IMessengerService;
+				if(!service)
+				{
+					this.groupNames = [];
+					return;
+				}
+				
+				var contacts:Array = service.contacts;
+				var filteredGroupNames:Array = [];
+				var contactCount:int = contacts.length;
+				for(var i:int = 0; i < contactCount; i++)
+				{
+					var contact:IContact = contacts[i] as IContact;
+					var groupName:String = contact.groupName;
+					if(filteredGroupNames.indexOf(groupName) < 0)
+					{
+						filteredGroupNames.push(groupName);
+					}
+				}
+				this.groupNames = filteredGroupNames;
+			}
+			
+			private function getServiceIcon(item:IMessengerService):Class
+			{
+				if(item is AIMService)
+				{
+					return Library.AimIcon;
+				}
+				return null;
+			}
+		]]>
+	</mx:Script>
+</mx:Window>
