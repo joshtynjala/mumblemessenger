@@ -9,6 +9,7 @@ package com.flashtoolbox.messenger.model
 	import flash.events.EventDispatcher;
 	import flash.events.Event;
 	import mx.collections.IViewCursor;
+	import com.flashtoolbox.mumble.IContact;
 
 	[Bindable]
 	public class MessengerModelLocator extends EventDispatcher implements IModelLocator
@@ -64,6 +65,16 @@ package com.flashtoolbox.messenger.model
 			}
 			
 			this.contacts = new ArrayCollection(allContacts);
+		}
+			
+		public function serviceToIcon(item:Object):Class
+		{
+			if(item is IContact) item = IContact(item).service;
+			if(item is AIMService)
+			{
+				return Library.AimIcon;
+			}
+			return null;
 		}
 	}
 }

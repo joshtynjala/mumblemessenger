@@ -1,6 +1,30 @@
+WindowedApplication
+{
+	backgroundGradientColors: #ffffff, #dddddd;
+}
+
 Window
 {
 	backgroundColor: #ffffff;
+}
+
+LoginForm
+{
+	paddingLeft: 10;
+	paddingRight: 10;
+	paddingTop: 10;
+	paddingBottom: 10;
+}
+
+ContactList
+{
+	paddingLeft: 0;
+	paddingRight: 0;
+	paddingTop: 0;
+	paddingBottom: 0;
+	verticalGap: 0;
+	backgroundColor: "#c0cbd0";
+	showFlexChrome: "false";
 }
 
 ConversationWindow
@@ -10,11 +34,6 @@ ConversationWindow
 	paddingTop: 10;
 	paddingBottom: 10;
 	verticalGap: 10;
-}
-
-MumbleMessenger
-{
-	backgroundGradientColors: #ffffff, #dddddd;
 }
 
 .errorMessage
