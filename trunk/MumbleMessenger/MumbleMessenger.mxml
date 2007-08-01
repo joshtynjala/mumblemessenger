@@ -4,26 +4,52 @@
 	xmlns:control="com.flashtoolbox.messenger.control.*"
 	xmlns:views="com.flashtoolbox.messenger.views.*"
 	xmlns="*"
-	layout="vertical" width="300" height="200"
+	layout="absolute" width="300" height="200"
 	title="Mumble Messenger" showStatusBar="false"
 	usePreloader="false">
 		
 	<!-- Cairngorm -->
 	<control:MessengerController id="controller"/>
-	<views:LoginForm width="100%" height="100%"/>
+	
+	<views:LoginForm id="loginForm" width="100%" height="100%" verticalCenter="0" connecting="this.currentState = 'Connecting'"/>
 	
 	<mx:Style source="style.css"/>
 	
 	<mx:Binding source="model.services" destination="services"/>
 	
+	<mx:states>
+		<mx:State name="Connecting">
+			<mx:AddChild>
+				<mx:ProgressBar id="connectionProgress" width="100%" verticalCenter="0" indeterminate="true" label=""/>
+			</mx:AddChild>
+			<mx:RemoveChild target="{loginForm}"/>
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition fromState="*" toState="Connecting">
+			<mx:Sequence>
+				<mx:AddChildAction target="{loginForm}"/>
+				<mx:Parallel duration="250">
+					<mx:Fade target="{loginForm}" alphaFrom="1" alphaTo="0"/>
+					<mx:Fade target="{connectionProgress}" alphaFrom="0" alphaTo="1"/>
+				</mx:Parallel>
+				<mx:RemoveChildAction target="{loginForm}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="Connecting" toState="">
+			<mx:SetPropertyAction target="{loginForm}" name="alpha" value="1"/>
+		</mx:Transition>
+	</mx:transitions>
+	
 	<mx:Script>
 		<![CDATA[
+			import mx.collections.ArrayCollection;
 			import com.flashtoolbox.mumble.IContact;
 			import com.flashtoolbox.mumble.ContactEvent;
 			import com.flashtoolbox.messenger.views.ConversationWindow;
 			import com.flashtoolbox.messenger.model.MessengerModelLocator;
 			import com.flashtoolbox.messenger.events.LogoutEvent;
-			import mx.collections.ArrayCollection;
 			import com.flashtoolbox.messenger.views.ContactList;
 			
 	    //----------------------------------
@@ -55,6 +81,7 @@
 						this.contactList.close();
 						this.contactList = null;
 					}
+					this.currentState = "";
 				}
 				
 				this.window.visible = value.length == 0;
@@ -67,13 +94,13 @@
 			private function createContactList():void
 			{
 				this.contactList = new ContactList();
-				this.contactList.addEventListener(Event.CLOSING, mainWindowClosingHandler);
+				this.contactList.addEventListener(Event.CLOSING, contactListClosingHandler);
 				this.contactList.open();
 			}
 		
-			private function mainWindowClosingHandler(event:Event):void
+			private function contactListClosingHandler(event:Event):void
 			{
-				this.closeConversations();
+				this.closeAllConversations();
 				this.contactList = null;
 				
 				var serviceCount:int = this.model.services.length;
@@ -82,10 +109,10 @@
 					var logout:LogoutEvent = new LogoutEvent(this.model.services[i]);
 					logout.dispatch();
 				}
-				this.visible = true;
+				this.window.visible = true;
 			}
 			
-			private function closeConversations():void
+			private function closeAllConversations():void
 			{				
 				var conversationCount:int = this.conversations.length;
 				for(var i:int = conversationCount - 1; i >= 0; i--)

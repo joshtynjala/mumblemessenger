@@ -80,16 +80,14 @@ package com.flashtoolbox.messenger.business
 			trace("error: " + event.time);
 			if(!this.service.connected)
 			{
-				if(this.model.services.length == 0)
-				{
-					this.model.services.refresh();
-					return;
-				}
-				
 				var index:int = this.model.services.getItemIndex(this.service);
 				if(index >= 0)
 				{
 					this.model.services.removeItemAt(index);
+				}
+				else
+				{
+					this.model.services.refresh();
 				}
 			}
 		}

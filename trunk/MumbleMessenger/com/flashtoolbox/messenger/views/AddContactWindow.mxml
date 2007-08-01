@@ -5,11 +5,8 @@
 	creationComplete="creationCompleteHandler();">
 	
 	<mx:StringValidator id="screenNameValidator" 
-        source="{contactScreenName}"
-        property="text"
-        required="true"
-        trigger="{addContactButton}"
-        triggerEvent="click"
+        source="{contactScreenName}" property="text" required="true"
+        trigger="{addContactButton}" triggerEvent="click"
         valid="addNewContact()"
         requiredFieldError="Enter a contact's screen name."/>
 	
@@ -62,7 +59,7 @@
 			
 			private function creationCompleteHandler():void
 			{
-				this.serviceDropDownFactory.properties = {iconFunction: getServiceIcon};
+				this.serviceDropDownFactory.properties = {iconFunction: this.model.serviceToIcon};
 			}
 			
 			private function addNewContact():void
@@ -101,15 +98,6 @@
 					}
 				}
 				this.groupNames = filteredGroupNames;
-			}
-			
-			private function getServiceIcon(item:IMessengerService):Class
-			{
-				if(item is AIMService)
-				{
-					return Library.AimIcon;
-				}
-				return null;
 			}
 		]]>
 	</mx:Script>

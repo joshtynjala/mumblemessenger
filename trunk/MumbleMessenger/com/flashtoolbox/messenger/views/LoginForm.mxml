@@ -4,6 +4,10 @@
 	xmlns:views="com.flashtoolbox.messenger.views.*"
 	xmlns="*">
 	
+	<mx:Metadata>
+		[Event(name="connecting",type="flash.events.Event")]
+	</mx:Metadata>
+	
 	<mx:StringValidator id="screenNameValidator" 
 		source="{screenNameInput}" property="text" required="true"
 		trigger="{signOnButton}" triggerEvent="click"
@@ -47,6 +51,8 @@
 				login.dispatch();
 				
 				this.passwordInput.text = "";
+				
+				this.dispatchEvent(new Event("connecting"));
 			}
 			
 		]]>

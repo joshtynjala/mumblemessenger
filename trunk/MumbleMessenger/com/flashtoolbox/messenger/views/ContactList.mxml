@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<views:ContactListBase
+<mx:Window
 	xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:toolbox="http://www.flextoolbox.com/2006/mxml"
 	xmlns:views="com.flashtoolbox.messenger.views.*"
 	title="Mumble Messenger"
 	layout="vertical" width="250" height="400"
-	backgroundColor="#c0cbd0" showFlexChrome="false"
-	paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+	creationComplete="createContextMenu()">
 	
 	<mx:Binding source="model.contacts" destination="dataProvider"/>
 	<mx:Binding source="model.contactListStatus" destination="messageStatus"/>
@@ -22,13 +21,13 @@
 	
 	<mx:List id="list" width="100%" height="100%"
 		labelField="screenName" doubleClickEnabled="true"
-		iconFunction="{getServiceIcon}"
+		iconFunction="{this.model.serviceToIcon}"
 		itemDoubleClick="listDoubleClickHandler(event)">
 	</mx:List>
 		
 	<mx:Fade id="quickFade" duration="100"/>
 	
-	<views:states>
+	<mx:states>
 		<mx:State name="AddContact">
 			<mx:AddChild relativeTo="{list}" position="before">
 			
@@ -66,9 +65,9 @@
 		<mx:State name="ShowSuccess" basedOn="ShowNotify">
 			<mx:SetProperty target="{notifyBar}" name="styleName" value="successMessage"/>
 		</mx:State>
-	</views:states>
+	</mx:states>
 	
-	<views:transitions>
+	<mx:transitions>
 		<mx:Transition fromState="" toState="AddContact">
 			<mx:Sequence>
 				<mx:Move target="{list}" duration="100"/>
@@ -111,6 +110,194 @@
 				<mx:Move target="{list}" duration="100"/>
 			</mx:Sequence>
 		</mx:Transition>
-	</views:transitions>
+	</mx:transitions>
 	
-</views:ContactListBase>
+	<mx:Script>
+		<![CDATA[
+			import com.flashtoolbox.messenger.model.MessengerModelLocator;
+			import mx.collections.ICollectionView;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.events.ListEvent;
+			import com.flashtoolbox.messenger.model.ContactListStatus;
+			import com.flashtoolbox.messenger.events.ContactActionEvent;
+			import com.flashtoolbox.mumble.IContact;
+			
+	    //----------------------------------
+		//  Properties
+	    //----------------------------------
+		
+			[Bindable]
+			protected var model:MessengerModelLocator = MessengerModelLocator.getInstance();
+			
+			private var _lastContact:IContact;
+			
+			private var _dataProvider:ICollectionView;
+			
+			public function get dataProvider():ICollectionView
+			{
+				return this._dataProvider;
+			}
+			
+			public function set dataProvider(value:ICollectionView):void
+			{
+				this._dataProvider = value;
+				this.invalidateProperties();
+			}
+		
+			public function set messageStatus(value:String):void
+			{
+				switch(value)
+				{
+					case ContactListStatus.ERROR:
+						this.currentState = "ShowError";
+						break;
+					case ContactListStatus.SUCCESS:
+						this.currentState = "ShowSuccess";
+						break;
+					case ContactListStatus.NOTIFICATION:
+						this.currentState = "ShowNotify";
+						break;
+					default:
+						this.currentState = "";
+				}
+			}
+		
+	    //----------------------------------
+		//  Protected Methods
+	    //----------------------------------
+	    
+			override protected function commitProperties():void
+			{
+				super.commitProperties();
+				if(this.list)
+				{
+					this.list.dataProvider = this._dataProvider;	
+				}
+			}
+	    
+	    //----------------------------------
+		//  Private Methods
+	    //----------------------------------
+			
+			private function createContextMenu():void
+			{
+				var listMenu:ContextMenu = new ContextMenu();
+				listMenu.hideBuiltInItems();
+				listMenu.addEventListener(ContextMenuEvent.MENU_SELECT, menuSelectHandler);
+				
+				var sendMessageItem:ContextMenuItem = new ContextMenuItem("Send Message");
+				sendMessageItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, sendMessageSelectHandler);
+				
+				var getProfileItem:ContextMenuItem = new ContextMenuItem("Get Profile");
+				getProfileItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, getProfileSelectHandler);
+				
+				listMenu.customItems = [sendMessageItem, getProfileItem];
+				
+				this.list.contextMenu = listMenu;
+				
+				var itemRendererFactory:ClassFactory = new ClassFactory(ContactListItemRenderer);
+				itemRendererFactory.properties = {mouseChildren: false};
+				this.list.itemRenderer = itemRendererFactory;
+			}
+			
+			private function addContactClickHandler(event:MouseEvent):void
+			{
+				var addContactWindow:AddContactWindow = new AddContactWindow();
+				addContactWindow.open();
+			}
+			
+			private function removeContactClickHandler(event:MouseEvent):void
+			{
+				var contact:IContact = this.list.selectedItem as IContact;
+				if(contact)
+				{
+					var removeContact:ContactActionEvent = new ContactActionEvent(ContactActionEvent.REMOVE_CONTACT, contact);
+					removeContact.dispatch();
+				}
+				else
+				{
+					this.model.contactListStatusMessage = "Select a contact to remove.";
+					this.model.contactListStatus = ContactListStatus.ERROR;
+				}
+			}
+			
+			private function sendMessageClickHandler(event:MouseEvent):void
+			{
+				var contact:IContact = this.list.selectedItem as IContact;
+				if(contact)
+				{
+					var openConversation:ContactActionEvent = new ContactActionEvent(ContactActionEvent.OPEN_CONVERSATION, contact)
+					openConversation.dispatch();
+				}
+				else
+				{
+					this.model.contactListStatusMessage = "Select a contact to send a message.";
+					this.model.contactListStatus = ContactListStatus.ERROR;
+				}
+			}
+		
+			private function listDoubleClickHandler(event:ListEvent):void
+			{
+				var contact:IContact = event.itemRenderer.data as IContact;
+				if(contact)
+				{
+					var openConversation:ContactActionEvent = new ContactActionEvent(ContactActionEvent.OPEN_CONVERSATION, contact)
+					openConversation.dispatch();
+				}
+			}
+		
+			private function sendMessageSelectHandler(event:ContextMenuEvent):void
+			{
+				var openConversation:ContactActionEvent = new ContactActionEvent(ContactActionEvent.OPEN_CONVERSATION, this._lastContact)
+				openConversation.dispatch();
+			}
+			
+			private function getProfileSelectHandler(event:ContextMenuEvent):void
+			{
+				var getProfile:ContactActionEvent = new ContactActionEvent(ContactActionEvent.GET_PROFILE, this._lastContact)
+				getProfile.dispatch();
+			}
+			
+			private function menuSelectHandler(event:ContextMenuEvent):void
+			{
+				var menu:ContextMenu = event.target as ContextMenu;
+				
+				var mousePosition:Point = new Point(this.mouseX, this.mouseY);
+				mousePosition = this.localToGlobal(mousePosition);
+				var objects:Array = this.list.getObjectsUnderPoint(mousePosition);
+				
+				this._lastContact = this.getContactUnderMouse();
+				var enableItems:Boolean = this._lastContact != null;
+				
+				var menuItems:Array = menu.customItems;
+				var itemCount:int = menuItems.length;
+				for(var i:int = 0; i < itemCount; i++)
+				{
+					var menuItem:ContextMenuItem = menuItems[i];
+					menuItem.enabled = enableItems;
+				}
+			}
+			
+			private function getContactUnderMouse():IContact
+			{
+				var mousePosition:Point = new Point(this.mouseX, this.mouseY);
+				mousePosition = this.localToGlobal(mousePosition);
+				var objects:Array = this.list.getObjectsUnderPoint(mousePosition);
+				
+				var enableItems:Boolean = false;
+				var objectCount:int = objects.length;
+				for(var i:int = 0; i < objectCount; i++)
+				{
+					var listItem:IListItemRenderer = objects[i] as IListItemRenderer;
+					if(listItem)
+					{
+						var contact:IContact = listItem.data as IContact;
+						return contact;
+					}
+				}
+				return null;
+			}
+		]]>
+	</mx:Script>
+	
+</mx:Window>
