@@ -157,7 +157,7 @@ package com.flashtoolbox.messenger.views
 			var fullMessage:String = event.data as String;
 			this.addMessage(this.contact.screenName, fullMessage);
 			
-			this.window.focus();
+			this.activate();
 		}
 		
 
